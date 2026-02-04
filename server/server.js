@@ -62,6 +62,27 @@ wss.on('connection', (ws) => {
   });
 });
 
+/* SERVER SENT EVENT */
+
+app.get('/server-sent-event', (req, res) => {
+  let { last } = req.query;
+  let lastUserIndex = last;
+
+  res.writeHead(200, {
+    Connection: 'keep-alive',
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+  })
+
+  eventEmitter.on(PUSH_USER_EVENT, () => {
+    const newUsers = usersDB.slice(last, usersDB.length);
+    last = usersDB.length;
+    const data = JSON.stringify({users: newUsers, last});
+
+    res.write(`data: ${data} \n\n`);
+  })
+})
+
 /* UTILS */
 
 function pushUser() {
